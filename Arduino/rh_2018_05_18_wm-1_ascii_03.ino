@@ -1,5 +1,5 @@
 /*!
-Arduino sketch for AD-conversion using interrupts.
+Arduino sketch for AD-conversion. Uses interrupts.
    Input:
       analog values at channel 1
    Output:
@@ -9,6 +9,7 @@ Arduino sketch for AD-conversion using interrupts.
 
 In the main loop the signal of ch_1 is continously converted and summed up.
 Every 1/40 second the interrupt subroutine >ISR(TIMER1_OVF_vect)< is called:
+   It toggles the LED with f = 1 Hz
    It averages the measured values;
    It sends the averaged value via serial:
       Format of sent value is configurable:
@@ -16,7 +17,6 @@ Every 1/40 second the interrupt subroutine >ISR(TIMER1_OVF_vect)< is called:
           binary: signed or signed, big endian or little endian
             (may be used to communicate with Spectrum Lab)
 
-   It toggles the LED with f = 1 Hz
 
 URL == https://www.heise.de/developer/artikel/Timer-Counter-und-Interrupts-3273309.html
 
@@ -275,7 +275,7 @@ ISR(TIMER1_OVF_vect) {
           }
 
 
-        if (!debug_hex) {                    // see binary data wirh >Device Monitoring Studio<: https://www.hhdsoftware.com/device-monitoring-studio
+        if (!debug_hex) {                    // see binary data with >Device Monitoring Studio<: https://www.hhdsoftware.com/device-monitoring-studio
           Serial.write(iq12_0) ;             // write binary data to COMx: 'stop byte'
           Serial.write(iq12_1) ;             // values
           Serial.write(iq12_2) ;             //         ...
@@ -294,7 +294,7 @@ ISR(TIMER1_OVF_vect) {
     }
 
   // reset sum
-  sum_val = 0 ;
+  // sum_val = 0 ;
   // reset counter of converted values from arduino ADC:
   cnt_val = 0 ;
 }
