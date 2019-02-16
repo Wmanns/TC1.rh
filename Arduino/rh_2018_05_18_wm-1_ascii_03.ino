@@ -1,4 +1,4 @@
-/*! 
+/*!
 Arduino sketch for AD-conversion using interrupts.
    Input:
       analog values at channel 1
@@ -7,14 +7,14 @@ Arduino sketch for AD-conversion using interrupts.
       LED   : blinking with f = 1 Hz
 
 
-In the main loop continously the signal of ch_1 is converted and summed up.
+In the main loop the signal of ch_1 is continously converted and summed up.
 Every 1/40 second the interrupt subroutine >ISR(TIMER1_OVF_vect)< is called:
-   It averages the measured values.
-   It sends averaged value via serial
+   It averages the measured values;
+   It sends the averaged value via serial:
       Format of sent value is configurable:
-          ASCII
+          ASCII  or
           binary: signed or signed, big endian or little endian
-            (may be used to communicate with
+            (may be used to communicate with Spectrum Lab)
 
    It toggles the LED with f = 1 Hz
 
