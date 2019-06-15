@@ -1,4 +1,4 @@
-/*
+/* *
 Test program for ADS1115 attached to arduino.
 Output via COM port +/- PCF8591 module by I2C.
 
@@ -56,7 +56,7 @@ SpectrumLab
 This program was originally developped to feed data into SpectrumLab
 via COM port. Especially with low frequencies SpectrumLab behaves in
 some way unpredictable (my experience) if data is fed by serial line.
-Nevertheless, you may give it a try, setting >serial_mode == serial_SpecLab<.
+Nevertheless, you may give it a try, setting >baud_rate == baud_SpecLab<.
 
 
 
@@ -100,9 +100,9 @@ int16_t outp_mode   ;
 int16_t data_mode     ;  // input data mode: sinetable oder AD-data
 
 // serial mode == configure COM port
-#define serial_SpecLab  0     // For communication with SpectrumLab
-#define serial_jAmaseis 1     // For use with jAmaseis
-int16_t serial_mode ;         // serial mode SpectrumLab or jAmaseis
+#define baud_SpecLab  0     // Baud rate for communication with SpectrumLab
+#define baud_jama 1        // Baud rate e.g. for use with jAmaseis
+int16_t baud_rate ;         // Baud rate for SpectrumLab or jAmaseis
 
 // when S16 (for SpectrumLab) : sync pattern
 unsigned int sync_patt ;  // sync    pattern
@@ -169,18 +169,18 @@ void setup()
   Wire.begin();
 
   // outp_mode   = S16   ;                 // output mode
-  // serial_mode = serial_SpecLab ;        // serial mode for SpectrumLab
+  // baud_rate = baud_SpecLab ;        // serial mode for SpectrumLab
   // data_mode   = synt_data ;             // synthetic data
 
   outp_mode   = ascii ;                 // output mode
-  serial_mode = serial_jAmaseis ;       // serial mode for jAmaSeis
+  baud_rate = baud_jama ;          // ASCII output, e.g. for jAmaSeis
   data_mode   = real_data ;             // data from seismometer
   // data_mode   = synt_data ;             // synthetic data
 
-  if (serial_mode == serial_SpecLab){
+  if (baud_rate == baud_SpecLab){
     Serial.begin(115200);               // SpectrumLab: Options > Audio I/O:
                                         //   Input Device: params 115200,8-N-1,S16,SYNC,1
-  } else if (serial_mode == serial_jAmaseis) {
+  } else if (baud_rate == baud_jama) {
     //Serial.begin(19200);                 // jAmaseis
     Serial.begin(9600);                 // jAmaseis
   } else {
