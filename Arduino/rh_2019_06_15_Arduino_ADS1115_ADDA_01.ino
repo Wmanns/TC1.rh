@@ -4,7 +4,7 @@ Output via COM port +/- PCF8591 module by I2C.
 
 Main features:
 output via COM-port:
-  - convert data with ADS115
+  - convert data with ADS1115
   - simulate data conversion by synthetic data
     (data format is choosable to be conformant with SpectrumLab).
 output via PCF8591:
@@ -14,9 +14,9 @@ Conversion rate:
   - Conversion rate is controlled by flags set by an interrupt handler.
 
 
-ADC with ADS115
+ADC with ADS1115
 ---------------
-A ADS115 is usable by the Adafruit_ADS1115 library.
+A ADS1115 is usable by the Adafruit_ADS1115 library.
 
 ADC simulated by synthetic sinus curve
 --------------------------------------
@@ -211,10 +211,10 @@ void setup()
 
   pinMode(ledPin, OUTPUT);              // LED Pin
 
-  // ADS115
+  // ADS1115
   //Adafruit_ADS1015 ads;               // Use thi for the 12-bit version
-  ads.setGain(GAIN_SIXTEEN);            // ADS115: 16x gain  +/- 0.256V  1 bit = 0.125mV  0.0078125mV
-  ads.begin();                          // ADS115
+  ads.setGain(GAIN_SIXTEEN);            // ADS1115: 16x gain  +/- 0.256V  1 bit = 0.125mV  0.0078125mV
+  ads.begin();                          // ADS1115
 
   // Set Timer #1
   noInterrupts();                       // diasable interrupts temporarily
