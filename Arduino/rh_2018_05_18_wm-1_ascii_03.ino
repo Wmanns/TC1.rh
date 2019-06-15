@@ -4,7 +4,8 @@ Arduino sketch for AD-conversion. Uses interrupts.
       analog values at channel 1
    Output:
       serial: converted values
-      LED   : blinking with f = 1 Hz
+      // LED   : blinking with f = 1 Hz
+      LED   : blinking with f = 1/2 sampling frequency == 20 Hz measured with DDS
 
 
 In the main loop the signal of ch_1 is continously converted and summed up.
@@ -161,6 +162,11 @@ void setup()
   // binary outp_mode
 }
 
+void toggle_led() {
+  led_status = digitalRead(ledPin) ^ 1 ;            // LED on -> off and vice versa
+  digitalWrite(ledPin, led_status ) ;               // LED ON - LED OFF
+}
+
 void serial_write_Big_Enddian(byte byte_high, byte byte_low){
   Serial.write((byte)byte_high); // write high order byte
   Serial.write((byte)byte_low);  // write low order byte
@@ -188,9 +194,7 @@ ISR(TIMER1_OVF_vect) {
   cnt_dt = cnt_dt + 1 ;
   // 1 Hz square signal: 0.5 sec down, 0.5 sec up
   if(cnt_dt == 20){
-    // digitalWrite(ledPin, digitalRead(ledPin) ^ 1); // LED ON - LED OFF
-    led_status = digitalRead(ledPin) ^ 1 ;            // LED on -> off and vice versa
-    digitalWrite(ledPin, led_status ) ;               // LED ON - LED OFF
+    // toggle_led() ;
     base_01_delta = base_01_delta * -1 ;              // square wave
     cnt_dt = 0 ;
     }
@@ -223,14 +227,6 @@ ISR(TIMER1_OVF_vect) {
   if (outp_mode == ascii){
     // write asccii strings to serial port:
     buf[0] = (char)0;  // clear buffer
-    // val == last val; avg_val == average val; ...
-    //  byte_low  = lowByte(avg_val);
-    //  byte_high = highByte(avg_val);
-    //  sprintf() == format ints into character array
-    //  sprintf(buf,"%d, %d, %d, %d, %d, %d",val, avg_val, line_01_hz + base_01_delta, line_20_hz + base_20_delta, byte_low, byte_high);  // debu
-    //  sprintf(buf,"%d, %d, %d", avg_val, byte_low, byte_high);  // debug
-    //  sprintf(buf,"%d, %d, %d, %d", avg_val, cnt_val, line_01_hz + base_01_delta, line_20_hz + base_20_delta);  // debug
-    //  sprintf(buf,"%d, %d, %d", avg_val, line_01_hz + base_01_delta, line_20_hz + base_20_delta);  // debug
     sprintf(buf,"%d", avg_val);  // jAmaSeis
     Serial.println(buf);
   } else if (outp_mode == U16 || outp_mode == U16_BE || outp_mode == S16 || outp_mode == S16_BE) {
@@ -251,51 +247,43 @@ ISR(TIMER1_OVF_vect) {
       serial_write_Enddian(byte_high, byte_low) ;
       }
   } else if (outp_mode == IQ12){
+    byte_high = highByte(avg_val);       // avg_val is a signed int
+    byte_low  = lowByte(avg_val);
 
-        byte_high = highByte(avg_val);       // avg_val is a signed int
-        byte_low  = lowByte(avg_val);
+    // for numbers <= 32767:  unsigned int == signed int, even low byte and high byte!
+    u_avg_val = avg_val;                 // avg_val is a signed int; u_avg_val is an unsigned int
+    u_byte_high = highByte(u_avg_val);   // >u_byte_high< should be identical to >byte_high<
+    u_byte_low  = lowByte(u_avg_val);    // >u_byte_low<  should be identical to >byte_low<
 
-        // for numbers <= 32767:  unsigned int == signed int, even low byte and high byte!
-        u_avg_val = avg_val;                 // avg_val is a signed int; u_avg_val is an unsigned int
-        u_byte_high = highByte(u_avg_val);   // >u_byte_high< should be identical to >byte_high<
-        u_byte_low  = lowByte(u_avg_val);    // >u_byte_low<  should be identical to >byte_low<
-
-        iq12_0 = 0xFF ;                          // 'stop-byte' == header byte: file:///D:/Spectrum/html/settings.htm#audio_via_COM_frame_sync
-        iq12_1 = u_byte_low ;                    // low byte of channel_1
-        iq12_2 = u_byte_low ;                    // test: channel_2 := channel_1
-        iq12_2 = lowByte(led_status);         // test: channel_2 = led_status (to measure conversion rate: results in 40 Hz
-        iq12_3 = byte_high + (byte_high << 4) ;  // significant parts of ch_1 and ch_2
-
-
-        if (iq12_2 == 0xFF){                 // prevent confusion with 'stop byte'
-          iq12_2 == 0xFE ;
-          }
-        if (iq12_1 == 0xFF){                 // prevent confusion with 'stop byte'
-          iq12_1 == 0xFE ;
-          }
+    iq12_0 = 0xFF ;                          // 'stop-byte' == header byte: file:///D:/Spectrum/html/settings.htm#audio_via_COM_frame_sync
+    iq12_1 = u_byte_low ;                    // low byte of channel_1
+    iq12_2 = u_byte_low ;                    // test: channel_2 := channel_1
+    iq12_2 = lowByte(led_status);         // test: channel_2 = led_status (to measure conversion rate: results in 40 Hz
+    iq12_3 = byte_high + (byte_high << 4) ;  // significant parts of ch_1 and ch_2
 
 
-        if (!debug_hex) {                    // see binary data with >Device Monitoring Studio<: https://www.hhdsoftware.com/device-monitoring-studio
-          Serial.write(iq12_0) ;             // write binary data to COMx: 'stop byte'
-          Serial.write(iq12_1) ;             // values
-          Serial.write(iq12_2) ;             //         ...
-          Serial.write(iq12_3) ;
-        } else {                             // write values as Hex readable in ASCII
-          buf[0] = (char)0;  // clear buffer
-          // sprintf(buf,"- %d %d %u %02X:%02X %02X:%02X", cnt_val, avg_val, u_avg_val, byte_low, byte_high, u_byte_low, u_byte_high);
-          // sprintf(buf,"- %d %u %02X:%02X %02X:%02X", cnt_val,u_avg_val, byte_low, byte_high, u_byte_low, u_byte_high);
-          // sprintf(buf,"- %d %u %02X:%02X %02X:%02X %02X:%02X %02X:%02X", cnt_val,u_avg_val, byte_low, byte_high, u_byte_low, u_byte_high, iq12[0], iq12[1], iq12[2], iq12[3]);
-          // sprintf(buf,"- %d %u %02X:%02X %02X:%02X %02X:%02X %02X:%02X", cnt_val,u_avg_val, byte_low, byte_high, u_byte_low, u_byte_high, iq12_0, iq12_1, iq12_2, iq12_3);
-          // sprintf(buf,"- %d %d %u %X:%X", cnt_val, avg_val, u_avg_val, byte_low, byte_high);
+    if (iq12_2 == 0xFF){                 // prevent confusion with 'stop byte'
+      iq12_2 == 0xFE ;
+      }
+    if (iq12_1 == 0xFF){                 // prevent confusion with 'stop byte'
+      iq12_1 == 0xFE ;
+      }
 
-          sprintf(buf,"- %d %u %02X:%02X %02X:%02X", cnt_val,u_avg_val, iq12_0, iq12_1, iq12_2, iq12_3);
-          Serial.println(buf);
-          }
+
+    if (!debug_hex) {                    // see binary data with >Device Monitoring Studio<: https://www.hhdsoftware.com/device-monitoring-studio
+      Serial.write(iq12_0) ;             // write binary data to COMx: 'stop byte'
+      Serial.write(iq12_1) ;             // values
+      Serial.write(iq12_2) ;             //         ...
+      Serial.write(iq12_3) ;
+      }
+    else {                             // write values as Hex readable in ASCII
+      buf[0] = (char)0;  // clear buffer
+      sprintf(buf,"- %d %u %02X:%02X %02X:%02X", cnt_val,u_avg_val, iq12_0, iq12_1, iq12_2, iq12_3);
+      Serial.println(buf);
     }
+  }
 
-  // reset sum
-  // sum_val = 0 ;
-  // reset counter of converted values from arduino ADC:
+  toggle_led() ;
   cnt_val = 0 ;
 }
 
