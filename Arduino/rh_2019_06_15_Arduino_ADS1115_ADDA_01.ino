@@ -96,13 +96,13 @@ int16_t outp_mode   ;
 
 // data mode == use real AD-data or sinetable
 #define synt_data 0  // use sinetable as data
-#define real_data 1  // use real AD-data
-int16_t data_mode     ;  // input data mode: sinetable oder AD-data
+#define ADC_data 1   // use data from AD conversion
+int16_t data_mode     ;  // input data mode
 
 // serial mode == configure COM port
 #define baud_SpecLab  0     // Baud rate for communication with SpectrumLab
-#define baud_jama 1        // Baud rate e.g. for use with jAmaseis
-int16_t baud_rate ;         // Baud rate for SpectrumLab or jAmaseis
+#define baud_jama 1         // Baud rate e.g. for use with jAmaseis
+int16_t baud_rate ;         // Baud rate
 
 // when S16 (for SpectrumLab) : sync pattern
 unsigned int sync_patt ;  // sync    pattern
@@ -169,12 +169,12 @@ void setup()
   Wire.begin();
 
   // outp_mode   = S16   ;                 // output mode
-  // baud_rate = baud_SpecLab ;        // serial mode for SpectrumLab
+  // baud_rate   = baud_SpecLab ;        // serial mode for SpectrumLab
   // data_mode   = synt_data ;             // synthetic data
 
   outp_mode   = ascii ;                 // output mode
-  baud_rate = baud_jama ;          // ASCII output, e.g. for jAmaSeis
-  data_mode   = real_data ;             // data from seismometer
+  baud_rate   = baud_jama ;             // baud rate, e.g. for jAmaSeis
+  data_mode   = ADC_data ;              // data from AD conversion, e.g. seismometer
   // data_mode   = synt_data ;             // synthetic data
 
   if (baud_rate == baud_SpecLab){
@@ -321,7 +321,7 @@ void toggle_led() {
 
 void send_data() {
   // send (real or synthtic) data to output ()
-  if (data_mode == real_data){  // use real data
+  if (data_mode == ADC_data){  // use data from AD conversion
     // calculate averaged value, reset sum and counter
     avg_val = (int) sum_val / cnt_val ;
   } else {
