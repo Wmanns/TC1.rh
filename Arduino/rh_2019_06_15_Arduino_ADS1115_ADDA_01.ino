@@ -1,5 +1,5 @@
 /*
-Test program for ADS115 attached to arduino.
+Test program for ADS1115 attached to arduino.
 Output via COM port +/- PCF8591 module by I2C.
 
 Main features:
